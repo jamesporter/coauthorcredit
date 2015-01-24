@@ -1,3 +1,45 @@
-{% for person in leaderboard %}
-    {{person.score}} {{person.name}}
-{% endfor %}
+{% extends "base.html" %}
+
+{% block main %}
+
+<div id="linksbox">
+
+    <div id="title">{{filePath}}</div>
+
+    <div id="filelist">
+        <table>
+
+            <tr>
+                <td>
+                    <strong>Position</strong>
+                </td>
+
+                <td>
+                    <strong>Name</strong>
+                </td>
+
+                <td>
+                    <strong>Contribution</strong>
+                </td>
+            </tr>
+
+            {% for person in leaderboard %}
+
+            <tr>
+                <td>
+                    <strong>{{loop.index }}</strong>
+                </td>
+
+                <td>
+                    {{person.name}}
+                </td>
+
+                <td>
+                    <strong>{{person.score}}</strong>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</div>
+{% endblock %}

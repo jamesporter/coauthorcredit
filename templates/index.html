@@ -1,13 +1,37 @@
+{% extends "base.html" %}
 
+{% block main %}
 
 {% if authorized %}
-
-Welcome back {{name}}
+<div id="titlebox">
+		<div id="title">Coauthor Credit</div>
+        <div id="slogan">Welcome back {{name}}</div>
+        <br>
+		<input type="text" id="filepath" placeholder="/DbxShare/" autocomplete="off" spellcheck="false" />
+		<button class="selectBtn" id="analyse">Analyse</button>
+	</div>
 
 {% else %}
-
-<a href="https://www.dropbox.com/1/oauth2/authorize?client_id={{app_key}}&response_type=code&redirect_uri={{redirect_uri}}&state={{csrf}}">
+<div id="titlebox">
+    <div id="title">Coauthor Credit</div>
+    <div id="slogan">Never get the credit you deserve? Find out who contributes the most and who's the slacker!</div>
+    <a class="selectBtn" href="https://www.dropbox.com/1/oauth2/authorize?client_id={{app_key}}&response_type=code&redirect_uri={{redirect_uri}}&state={{csrf}}">
     Authorise Dropbox
-</a>
-
+    </a>
+</div>
 {% endif %}
+
+
+<script>
+    $('#analyse').click(function(){
+        var choice = $('#filepath').val();
+        choice = encodeURI(choice);
+
+        if(choice.length == 0)
+            choice = "DbxShare";
+
+        window.location.pathname = "/open/" + choice;
+    });
+</script>
+
+{% endblock %}

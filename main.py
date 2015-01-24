@@ -103,7 +103,7 @@ def get_dbx_user_info(authToken):
 
 
 def get_metadata_for_path(authToken, path):
-    result = urlfetch.fetch(url="https://api.dropbox.com/1/metadata/auto/" + path + "?list=true",
+    result = urlfetch.fetch(url="https://api.dropbox.com/1/metadata/auto/" + urllib.quote(path) + "?list=true",
                             headers={"Authorization" : "Bearer %s" % authToken})
 
     #Should get:
@@ -233,7 +233,7 @@ class AuthHandler(webapp2.RequestHandler):
                 userModel.name = userResult.content["display_name"]
                 userModel.put()
 
-                self.response.out.write("Welcome %s" % userModel.name)
+                self.redirect("/")
         else:
             self.response.out.write("Unable to connect to Dropbox")
 
@@ -248,7 +248,7 @@ class OpenHandler(webapp2.RequestHandler):
             if userModel.authorized:
                 fileList = get_metadata_for_path(userModel.dbxCode, path)
                 template = jinja_environment.get_template("openFolder.html")
-                self.response.out.write(template.render({"fileList": fileList}))
+                self.response.out.write(template.render({"fileList": fileList, "path": path}))
 
 
 def build_leaderboard(revisions):
@@ -256,6 +256,7 @@ def build_leaderboard(revisions):
     size = 0
     sr = sorted(revisions, key=lambda itm: itm["revision"])
     for item in sr:
+        #This will crash if not a shared folder (and thus don't have modifier... should check)
         name = item["modifier"]["display_name"]
         if name in points:
             points[name] += (item["bytes"] - size)
@@ -284,7 +285,7 @@ class ResultsHandler(webapp2.RequestHandler):
 
                 print(leaderboard)
                 template = jinja_environment.get_template("results.html")
-                self.response.out.write(template.render({"leaderboard": leaderboard}))
+                self.response.out.write(template.render({"leaderboard": leaderboard, "filePath": filePath}))
 
 
 

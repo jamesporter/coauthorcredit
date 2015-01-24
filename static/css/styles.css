@@ -1,0 +1,113 @@
+
+@-webkit-keyframes fade {
+    0% {
+        opacity: 0;
+    }
+
+    60% {
+        opacity: 1;
+    }
+}
+html { 
+	background: url(../img/bg.jpg) no-repeat center center fixed;
+	-webkit-background-size: cover;
+	-moz-background-size: cover;
+	-o-background-size: cover;
+	background-size: cover;
+	background-color: #d0c6c4;
+}
+body, button{
+	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+	color: #FFF;
+	font-size: 14px;
+}
+div#titlebox{
+	width: 800px;
+	padding: 200px 100px;
+	margin: 0 auto;
+}
+div#title{
+	font-family: Montserrat, sans-serif;
+	font-weight: 800;
+	font-size: 52px;
+	margin: 0 0 10px;
+}
+div#slogan{
+	color: #EEE;
+	width: 480px;
+	font-family: Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+	text-transform: uppercase;
+	line-height: 160%;
+	margin: 0 0 4px;
+	-webkit-animation: fade 4s;
+    -webkit-animation-fill-mode: both;
+}
+
+.selectBtn{
+
+	border: none;
+	color: #fff;
+	border-color: #357ebd;
+	font-size: 18px;
+	line-height: 1.33;
+	border-radius: 6px;
+	margin: 1em 0;
+	padding: 14px 20px;
+	background: #F7D145;
+	-webkit-transition: all 0.2s ease-in-out;
+	transition: all 0.2s ease-in-out;
+	-webkit-animation: fade 4s;
+    -webkit-animation-fill-mode: both;
+    text-decoration: none;
+}
+.selectBtn:hover{
+	cursor: pointer;
+	color: #fff;
+	background-color: #EAC956;
+	border-color: #EAC956;
+    text-decoration: none;
+}
+input#filepath{
+	padding: 14px 20px;
+	font-size: 18px;
+	width: 400px;
+	border-radius: 6px;
+	border: 1px solid white;
+	margin-right: 12px;
+	-webkit-animation: fade 4s;
+    -webkit-animation-fill-mode: both;
+}
+div#linksbox{
+	width: 800px;
+	padding: 100px 100px;
+	margin: 0 auto;
+}
+div#directory{
+	padding: 8px 16px;
+	font-weight: bold;
+}
+table{
+	width: 100%;
+	border: 0;
+	text-align: left;
+	color: #111;
+}
+tr#head{
+	background: 0;
+}
+tr{
+	background-color: #fff;
+	background-color: rgba(255,255,255,0.8);
+}
+table td{
+    padding: 20px 16px;
+}
+table td a{
+	color: #000;
+    font-weight: bold;
+    text-decoration: none;
+}
+table td a:hover{
+    font-weight: bold;
+    text-decoration: underline;
+}

@@ -1,3 +1,26 @@
-{% for item in fileList%}
-  <li><a href="/results/{{item.path}}">{{ item.path}}</a> (Last modified by {{item.modifier.display_name}}</li>
-{% endfor %}
+{% extends "base.html" %}
+
+{% block main %}
+
+<div id="linksbox">
+
+    <div id="title">{{path}}</div>
+
+    <div id="filelist">
+        <table>
+        <tr>
+            <td><strong>File Name</strong></td>
+            <td><strong>Last Contribution</strong></td>
+        </tr>
+
+        {% for item in fileList%}
+                <tr>
+                    <td><a href="/results/{{item.path}}">{{ item.path}}</a></td>
+                    <td>{{item.modifier.display_name}}</td>
+                </tr>
+
+        {% endfor %}
+        </table>
+    </div>
+</div>
+{% endblock %}
