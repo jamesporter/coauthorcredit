@@ -12,8 +12,11 @@ class UserRecord(db.Model):
     email = db.EmailProperty()
     name = db.StringProperty()
     code = db.StringProperty()
+
+    authorized = db.BooleanProperty(default=False)
     dbxUid = db.StringProperty()
     dbxCode = db.StringProperty()
+    dbxPath = db.StringProperty()
     created = db.DateTimeProperty(auto_now_add=True)
 
     @classmethod
