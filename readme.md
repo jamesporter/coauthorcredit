@@ -17,5 +17,6 @@ Also, there is a url hardcoded in one place for the Dropbox token request (as we
 ## Improvements
 
 Lots of things could be improved: this was made in a few hours at Dropbox's 2015 London Hackathon.
-Most of the frustration of working with this kind of thing is that code must be deployed to get tokens etc (so a way of locally testing it would be a good first step before devloping things further).
+Most of the frustration of working with this kind of thing is that code must be deployed to get tokens etc (so a way of locally testing it would be a good first step before developing things further)... perhaps with a 'local'/'dev' flag
+Some tests would be good
 We started with webhooks, although realised this wasn't necessary for our core idea. For realtime updates/actions these might be useful.
