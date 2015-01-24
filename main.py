@@ -5,6 +5,7 @@ import jinja2
 import os
 from google.appengine.api import users
 import dbx_keys
+import models
 
 jinja_environment = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__) + "/templates/"))
@@ -24,8 +25,19 @@ jinja_environment = jinja2.Environment(
 
 class MainHandler(webapp2.RequestHandler):
     def get(self):
-        template = jinja_environment.get_template("index.html")
-        self.response.out.write(template.render({}))
+        user = users.get_current_user()
+        if not user:
+            self.redirect(users.create_login_url("/"))
+        else:
+            userModel = models.UserRecord.get_and_create(user)
+            template = jinja_environment.get_template("index.html")
+
+            #Note must be https redirect url (hence replacing http if in url)
+            self.response.out.write(template.render({
+                "app_key":dbx_keys.keys["app_key"],
+                "redirect_uri":self.request.url.replace("http", "https") + "dbxauth",
+                "csrf":userModel.code
+            }))
 
 
 class HooksHandler(webapp2.RequestHandler):
@@ -51,7 +63,15 @@ class HooksHandler(webapp2.RequestHandler):
 
 
 class AuthHandler(webapp2.RequestHandler):
-    pass
+    def get(self):
+        dbxCode = self.request.get('code')
+        dbxState = self.request.get('state')
+        #TODO check state matched the user's CSRF token...
+
+
+
+
+        self.response.out.write("Auth Response")
 
 
 app = webapp2.WSGIApplication([
