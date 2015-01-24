@@ -10,6 +10,7 @@ import models
 from google.appengine.api import urlfetch
 import urllib
 import json
+from collections import defaultdict
 
 
 def get_encoded_auth():
@@ -19,7 +20,7 @@ def get_encoded_auth():
 jinja_environment = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__) + "/templates/"))
 
-#jinja_environment.filters['datetime'] =
+jinja_environment.filters['escape'] = urllib.quote
 
 # Can do things like:
 # user = users.get_current_user()
@@ -27,9 +28,6 @@ jinja_environment = jinja2.Environment(
 #
 # else:
 #     userModel = models.UserRecord.get_and_create(user)
-
-
-
 
 
 class MainHandler(webapp2.RequestHandler):
@@ -196,6 +194,23 @@ def get_revisions_for_file(authToken, filePath):
     #     }
     # ]
 
+    # Should also have a modifier	For files within a shared folder,
+    # this field specifies which user last modified this file.
+    # The value is a user dictionary with the fields uid (user ID), display_name,
+    # and, if the linked account is a member of a Dropbox for Business team, same_team
+    # (whether the user is on the same team as the linked account). If this endpoint
+    # is called by a Dropbox for Business app and the user is on that team, a
+    # member_id field will also be present in the user dictionary. If the modifying
+    # user no longer exists, the value will be null.
+
+
+
+    jr = json.loads(result.content)
+    print "Got %d revisions" % len(jr)
+    return jr
+
+
+
 
 class AuthHandler(webapp2.RequestHandler):
     def get(self):
@@ -232,10 +247,28 @@ class OpenHandler(webapp2.RequestHandler):
             userModel = models.UserRecord.get_and_create(user)
             if userModel.authorized:
                 fileList = get_metadata_for_path(userModel.dbxCode, path)
-                self.response.out.write(repr(fileList))
+                template = jinja_environment.get_template("openFolder.html")
+                self.response.out.write(template.render({"fileList": fileList}))
 
 
+def build_leaderboard(revisions):
+    points = {}
+    size = 0
+    sr = sorted(revisions, key=lambda itm: itm["revision"])
+    for item in sr:
+        name = item["modifier"]["display_name"]
+        if name in points:
+            points[name] += (item["bytes"] - size)
+        else:
+            points[name] = (item["bytes"] - size)
+        size = item["bytes"]
 
+    leaderboard = []
+    for k,v in points.iteritems():
+        leaderboard.append({
+            "name": k, "score":v
+        })
+    return sorted(leaderboard, key=lambda itm: itm["score"], reverse=True)
 
 
 class ResultsHandler(webapp2.RequestHandler):
@@ -245,7 +278,14 @@ class ResultsHandler(webapp2.RequestHandler):
             self.redirect(users.create_login_url("/"))
         else:
             userModel = models.UserRecord.get_and_create(user)
-            #TODO
+            if userModel.authorized:
+                revisionList = get_revisions_for_file(userModel.dbxCode, urllib.quote(filePath))
+                leaderboard = build_leaderboard(revisionList)
+
+                print(leaderboard)
+                template = jinja_environment.get_template("results.html")
+                self.response.out.write(template.render({"leaderboard": leaderboard}))
+
 
 
 

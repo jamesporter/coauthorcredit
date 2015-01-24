@@ -1,0 +1,3 @@
+{% for item in fileList%}
+  <li><a href="/results/{{item.path}}">{{ item.path}}</a> (Last modified by {{item.modifier.display_name}}</li>
+{% endfor %}
