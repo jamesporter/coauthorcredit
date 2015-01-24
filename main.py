@@ -18,7 +18,7 @@ class MainHandler(webapp2.RequestHandler):
 class HooksHandler(webapp2.RequestHandler):
     def get(self):
         """Respond to the webhook verification (GET request) by echoing back the challenge parameter."""
-        self.response.out.write(self.request.args.get('challenge'))
+        self.response.out.write(self.request.get('challenge'))
 
 
 app = webapp2.WSGIApplication([
