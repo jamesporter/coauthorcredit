@@ -12,6 +12,8 @@ class UserRecord(db.Model):
     email = db.EmailProperty()
     name = db.StringProperty()
     code = db.StringProperty()
+    dbxUid = db.StringProperty()
+    dbxCode = db.StringProperty()
     created = db.DateTimeProperty(auto_now_add=True)
 
     @classmethod
@@ -39,3 +41,8 @@ class UserRecord(db.Model):
             return us[0]
         else:
             return None
+
+    def add_dbx_details(self, uid, code):
+        self.dbxUid = uid
+        self.dbxCode = code
+        self.put()

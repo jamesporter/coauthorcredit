@@ -5,7 +5,16 @@ import jinja2
 import os
 from google.appengine.api import users
 import dbx_keys
+import base64
 import models
+from google.appengine.api import urlfetch
+import urllib
+import json
+
+
+def get_encoded_auth():
+    return base64.b64encode("%s:%s" % (dbx_keys.keys["app_key"], dbx_keys.keys["app_secret"]))
+
 
 jinja_environment = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__) + "/templates/"))
@@ -35,7 +44,7 @@ class MainHandler(webapp2.RequestHandler):
             #Note must be https redirect url (hence replacing http if in url)
             self.response.out.write(template.render({
                 "app_key":dbx_keys.keys["app_key"],
-                "redirect_uri":self.request.url.replace("http", "https") + "dbxauth",
+                "redirect_uri":self.request.url.replace("http://", "https://") + "dbxauth",
                 "csrf":userModel.code
             }))
 
@@ -69,10 +78,39 @@ class AuthHandler(webapp2.RequestHandler):
         #TODO check state matched the user's CSRF token...
 
 
+        token_url = "https://api.dropbox.com/1/oauth2/token"
+        payload = {
+            "code": dbxCode,
+            "grant_type": "authorization_code",
+            "redirect_uri": "https://coauthorcredit.appspot.com/dbxauth"
+        }
 
+        result = urlfetch.fetch(url=token_url,
+                                payload=urllib.urlencode(payload),
+                                method=urlfetch.POST,
+                                headers={'Content-Type': 'application/x-www-form-urlencoded',
+                                         "Authorization": "Basic %s" % get_encoded_auth()})
 
-        self.response.out.write("Auth Response")
+        #Result is like (when successful):
+        # result.content = {"access_token": "YNHyiBlw7vAAAAAAAAALE5CLFv1S7at70jmhpNH-qVo82sSlmAG7qOH0IOdcoebV", "token_type": "bearer", "uid": "63235995"}'
+        # result.status_code: 200
+        # result.headers = {'via': 'HTTP/1.1 GWA', 'set-cookie': 'gvc=MjUxNjIzOTQzMjU1MTE2Mjc4ODc2NzgxODExODE5NzcxNTM5ODU2; expires=Thu, 23 Jan 2020 13:02:11 GMT; Path=/; httponly', 'x-google-cache-control': 'remote-fetch', 'x-server-response-time': '301', 'server': 'nginx', 'date': 'Sat, 24 Jan 2015 13:02:11 GMT', 'connection': 'keep-alive', 'x-dropbox-request-id': 'eec75ddd4d5889c9796b4b16ea141794', 'pragma': 'no-cache', 'cache-control': 'no-cache', 'x-dropbox-http-protocol': 'None', 'x-frame-options': 'SAMEORIGIN', 'content-type': 'text/javascript'}
 
+        result.content = json.loads(result.content)
+
+        if "access_token" in result.content:
+            user = users.get_current_user()
+            if not user:
+                self.redirect(users.create_login_url("/"))
+            else:
+                userModel = models.UserRecord.get_and_create(user)
+                userModel.add_dbx_details(result.content['uid'], result.content['access_token'])
+
+                userResult = urlfetch.fetch(url="https://api.dropbox.com/1/account/info",
+                                            headers={"Authorization" : "Bearer %s" % userModel.dbxCode})
+                self.response.out.write(repr(userResult.content))
+        else:
+            self.response.out.write("Unable to connect to Dropbox")
 
 app = webapp2.WSGIApplication([
     ('/', MainHandler),
