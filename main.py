@@ -103,6 +103,14 @@ def get_dbx_user_info(authToken):
     return userResult
 
 
+def get_metadata_for_path(authToken, path):
+    pass
+
+
+def get_revisions_for_file(authToken, filePath):
+    pass
+
+
 class AuthHandler(webapp2.RequestHandler):
     def get(self):
         dbxCode = self.request.get('code')
