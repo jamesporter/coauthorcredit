@@ -98,17 +98,103 @@ def post_dbx_token(code):
 
 def get_dbx_user_info(authToken):
     userResult = urlfetch.fetch(url="https://api.dropbox.com/1/account/info",
+
                                             headers={"Authorization" : "Bearer %s" % authToken})
     userResult.content = json.loads(userResult.content)
     return userResult
 
 
 def get_metadata_for_path(authToken, path):
-    pass
+    result = urlfetch.fetch(url="https://api.dropbox.com/1/metadata/auto/" + path + "?list=true",
+                            headers={"Authorization" : "Bearer %s" % authToken})
+
+    #Should get:
+    # {
+    #     "size": "0 bytes",
+    #     "hash": "37eb1ba1849d4b0fb0b28caf7ef3af52",
+    #     "bytes": 0,
+    #     "thumb_exists": false,
+    #     "rev": "714f029684fe",
+    #     "modified": "Wed, 27 Apr 2011 22:18:51 +0000",
+    #     "path": "/Photos",
+    #     "is_dir": true,
+    #     "icon": "folder",
+    #     "root": "dropbox",
+    #     "contents": [
+    #         {
+    #             "size": "2.3 MB",
+    #             "rev": "38af1b183490",
+    #             "thumb_exists": true,
+    #             "bytes": 2453963,
+    #             "modified": "Mon, 07 Apr 2014 23:13:16 +0000",
+    #             "client_mtime": "Thu, 29 Aug 2013 01:12:02 +0000",
+    #             "path": "/Photos/flower.jpg",
+    #             "photo_info": {
+    #               "lat_long": [
+    #                 37.77256666666666,
+    #                 -122.45934166666667
+    #               ],
+    #               "time_taken": "Wed, 28 Aug 2013 18:12:02 +0000"
+    #             },
+    #             "is_dir": false,
+    #             "icon": "page_white_picture",
+    #             "root": "dropbox",
+    #             "mime_type": "image/jpeg",
+    #             "revision": 14511
+    #         }
+    #     ],
+    #     "revision": 29007
+    # }
+    jc = json.loads(result.content)
+
+    if "contents" in jc:
+        contentsList = jc["contents"]
+        info = []
+        for item in contentsList:
+            if item['is_dir']:
+                pass #for now we ignore, should add a link to this?
+            else:
+                info.append(item)
+        return info
+    else:
+        print jc
+        return []
 
 
 def get_revisions_for_file(authToken, filePath):
-    pass
+    result = urlfetch.fetch(url="https://api.dropbox.com/1/revisions/auto/" + filePath,
+                            headers={"Authorization" : "Bearer %s" % authToken})
+
+    #Should get:
+    # [
+    #     {
+    #         "is_deleted": true,
+    #         "revision": 4,
+    #         "rev": "40000000d",
+    #         "thumb_exists": false,
+    #         "bytes": 0,
+    #         "modified": "Wed, 20 Jul 2011 22:41:09 +0000",
+    #         "path": "/hi2",
+    #         "is_dir": false,
+    #         "icon": "page_white",
+    #         "root": "app_folder",
+    #         "mime_type": "application/octet-stream",
+    #         "size": "0 bytes"
+    #     },
+    #     {
+    #         "revision": 1,
+    #         "rev": "10000000d",
+    #         "thumb_exists": false,
+    #         "bytes": 3,
+    #         "modified": "Wed, 20 Jul 2011 22:40:43 +0000",
+    #         "path": "/hi2",
+    #         "is_dir": false,
+    #         "icon": "page_white",
+    #         "root": "app_folder",
+    #         "mime_type": "application/octet-stream",
+    #         "size": "3 bytes"
+    #     }
+    # ]
 
 
 class AuthHandler(webapp2.RequestHandler):
@@ -136,8 +222,37 @@ class AuthHandler(webapp2.RequestHandler):
         else:
             self.response.out.write("Unable to connect to Dropbox")
 
+
+class OpenHandler(webapp2.RequestHandler):
+    def get(self, path):
+        user = users.get_current_user()
+        if not user:
+            self.redirect(users.create_login_url("/"))
+        else:
+            userModel = models.UserRecord.get_and_create(user)
+            if userModel.authorized:
+                fileList = get_metadata_for_path(userModel.dbxCode, path)
+                self.response.out.write(repr(fileList))
+
+
+
+
+
+class ResultsHandler(webapp2.RequestHandler):
+    def get(self, filePath):
+        user = users.get_current_user()
+        if not user:
+            self.redirect(users.create_login_url("/"))
+        else:
+            userModel = models.UserRecord.get_and_create(user)
+            #TODO
+
+
+
 app = webapp2.WSGIApplication([
     ('/', MainHandler),
+    ('/open/(.+)', OpenHandler),
+    ('/results/(.+)', ResultsHandler),
     ('/dbxauth', AuthHandler),
     ('/webhook', HooksHandler),
 ], debug=True)
